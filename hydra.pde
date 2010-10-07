@@ -1,13 +1,13 @@
-int opoof[9] = {3,4,5,6,7,8,9,10,11};
-int opoofled[9] = {12,14,15,16,17,18,19,20,21};
-int ipoofbtn[9] = {22,23,24,25,26,27,28,29,30};
-int irandombtn = 31;
-int orandomled = 32;
-int iallpoofbtn = 33;
-int oallpoofled = 34;
-int imusic = 35;
-int omusicled = 36;
-int osetstepled = 37;
+int opoof[9] = {2,3,4,5,6,7,8,9,10};
+int opoofled[9] = {20,21,22,23,24,25,26,27,28};
+int ipoofbtn[9] = {29,30,31,32,33,34,35,36,37};
+int ostepled[12] = {38,39,40,41,42,43,44,45,46,47,48,49};
+int irandombtn = 11;
+int orandomled = 12;
+int iallpoofbtn = 14;
+int oallpoofled = 15;
+int imusic = 16;
+int omusicled = 17;
 int inumsteps = 1;
 int isetstep = 2;
 int isteplength = 3;
@@ -32,6 +32,8 @@ int i=0;
 int j=0;
 int k=0;
 int mode = 0;
+int blinkcount = 0;
+int blinkflipflop = LOW;
 
 
 void setup(){
@@ -39,14 +41,16 @@ void setup(){
     pinMode(opoof[i], OUTPUT);
     pinMode(opoofled[i], OUTPUT);
     pinMode(ipoofbtn[i], INPUT);
-  }  
+  }
+  for (i=0;i<12;i++){
+    pinMode(ostepled[i], OUTPUT);
+  }
   pinMode (irandombtn, INPUT);
   pinMode (orandomled, OUTPUT);
   pinMode (iallpoofbtn, INPUT);
   pinMode (oallpoofled, OUTPUT);
   pinMode (imusic, INPUT);
   pinMode (omusicled, OUTPUT);
-  pinMode (osetstepled, OUTPUT); 
   randomSeed(analogRead(0));
 }
 
@@ -60,6 +64,7 @@ void loop(){
       setstep = readknob(isetstep);
       domusicleds();
     }
+    dostepleds();
     for (i=0; i<9; i++){
       if (readbtn(ipoofbtn[i])){
         musicstate[setstep][i] = musicstate[setstep][i]?LOW:HIGH;
@@ -80,18 +85,18 @@ void loop(){
           }
           poofstate[i] = HIGH;
         }
-      }            
+      }
     }
     for (i=0; i<9; i++){
       if (poofcount[i] <= 0){
         poofstate[i] = LOW;
       }
-      else {      
+      else {
         poofcount[i]--;
       }
     }
-    j++;    
-  }  
+    j++;
+  }
   if (mode == 2){
     randpoofprob = 3 + 3 * analogRead(isteplength);
     randpooflength = 10 + analogRead(ipooflength)/100;
@@ -121,7 +126,8 @@ void loop(){
   for (i=0; i<9; i++){
     digitalWrite(opoof[i], poofstate[i]);
   }
-  delay(10);  
+  blinkcount--;
+  delay(10);
 }
 
 
@@ -138,7 +144,7 @@ int readknob(int knob){
       out = i-1;
     }
   }
-  return out;   
+  return out;
 }
 
 int readbtn(int btn){
@@ -173,7 +179,7 @@ void domode(){
   }
   else if (digitalRead(iallpoofbtn)){
     newmode = 3;
-  }  
+  }
   if (newmode != mode){
     for (k=0; k<9; k++){
       poofstate[k] = mode == 3 ? HIGH : LOW;
@@ -182,26 +188,32 @@ void domode(){
         digitalWrite(opoofled[k],LOW);
       }
     }
+    if (newmode != 1){
+      for (k=0; k<12; k++){
+        digitalWrite(ostepled[k],LOW);
+      }
+    }
     switch(newmode){
       case 0:
-        digitalWrite(omusicled, LOW);        
+        digitalWrite(omusicled, LOW);
         digitalWrite(orandomled, LOW);
-      break;   
+      break;
       case 1:
-        digitalWrite(omusicled, HIGH);        
+        digitalWrite(omusicled, HIGH);
         digitalWrite(orandomled, LOW);
         domusicleds();
+        dostepleds();
         currstep=0;
         j=10000;
         nextstep=0;
         currstep=0;
-      break;    
+      break;
       case 2:
-        digitalWrite(omusicled, LOW);        
+        digitalWrite(omusicled, LOW);
         digitalWrite(orandomled, HIGH);
       break;
       case 3:
-        digitalWrite(omusicled, LOW);        
+        digitalWrite(omusicled, LOW);
         digitalWrite(orandomled, LOW);
       break;
     }
@@ -214,14 +226,36 @@ void domusicleds(){
     for (k=0; k<9; k++){
       digitalWrite(opoofled[k], LOW);
     }
-    digitalWrite(osetstepled, HIGH);
   }
   else {
     for (k=0; k<9; k++){
       digitalWrite(opoofled[k], musicstate[setstep][k]);
     }
-    digitalWrite(osetstepled, LOW);
   }
-}  
+}
+void dostepleds(){
+  for (k=0; k < 12; k++) {
+    if (k <= numsteps){
+      if (k = setstep){//blink led for current step
+        if (blinkcount < 1){
+          if (blinkflipflop){
+            blinkflipflop = LOW;
+            blinkcount = 20;
+          }
+          else {
+            blinkflipflop = HIGH;
+            blinkcount = 60;
+          }
+        }
+        digitalWrite(ostepled[k], blinkflipflop);
+      }
+      else {
+        digitalWrite(ostepled[k], HIGH);
+      }
+    }
+    else {
+        digitalWrite(ostepled[k], LOW);
+    }
+  }
+}
     
-
