@@ -51,13 +51,13 @@ void setup(){
   pinMode (oallpoofled, OUTPUT);
   pinMode (imusic, INPUT);
   pinMode (omusicled, OUTPUT);
-  randomSeed(analogRead(0));
+  randomSeed(analogRead(5));
 }
 
 void loop(){
   domode();
   switch (mode){
-    case 0:
+    case 0:// no sequence, poof from buttons
       for (i=0;i<9;i++){
         if (digitalRead(ipoofbtn[i])){
           poofstate[i] = HIGH;
@@ -67,13 +67,13 @@ void loop(){
         }
       }
      break;
-    case 1:
+    case 1://musical sequence
       numsteps = readknob(inumsteps);
       setstep = readknob(isetstep);
-      steplength = 10 + analogRead(isteplength)/10;
-      pooflength = 10 + analogRead(ipooflength)/10;
+      steplength = 10 + (1023-analogRead(isteplength))/10;
+      pooflength = 10 + (1023-analogRead(ipooflength))/10;
       for (k=0; k < 12; k++) {
-        if (k <= numsteps && (k != currstep || currstep == setstep)){// turn on step leds that are on
+        if (k <= numsteps && (k != currstep || currstep == setstep)){// turn on step leds
           if (k == setstep){//blink led for current step
             if (blinkcount < 1){
               if (blinkflipflop){
@@ -97,13 +97,10 @@ void loop(){
       }
       if (setstep <= numsteps) {
         for (k=0; k<9; k++){
+          if (readbtn(ipoofbtn[k])){
+            musicstate[setstep][k] = musicstate[setstep][k]?LOW:HIGH;
+          }
           digitalWrite(opoofled[k], musicstate[setstep][k]);
-        }
-      }
-      for (i=0; i<9; i++){
-        if (readbtn(ipoofbtn[i])){
-          musicstate[setstep][i] = musicstate[setstep][i]?LOW:HIGH;
-          digitalWrite(opoofled[i], musicstate[setstep][i]);
         }
       }
       if (j>steplength){
@@ -132,9 +129,9 @@ void loop(){
       }
       j++;
     break;
-    case 2:
-      randpoofprob = 3 + 3 * analogRead(isteplength);
-      randpooflength = 10 + analogRead(ipooflength)/100;
+    case 2:// random
+      randpoofprob = 3 + 3 * (1023 - analogRead(isteplength));
+      randpooflength = 10 + (1023 - analogRead(ipooflength))/10;
       allpoofprob = randpoofprob * 50;
       for (i=0; i<9; i++){
         if (poofcount[i] > 0) {
@@ -158,7 +155,7 @@ void loop(){
         }
       }
     break;
-    case 3:
+    case 3:// allpoof
       for (i=0; i<9; i++){
         poofstate[i]=HIGH;
       } 
@@ -235,19 +232,12 @@ void domode(){
   if (newmode != mode){
     for (k=0; k<9; k++){
       poofcount[k] = 0;
-      if (newmode != 1){
-        digitalWrite(opoofled[k],LOW);
-      }
-    }
-    if (newmode != 1){
-      for (k=0; k<12; k++){
-        digitalWrite(ostepled[k],LOW);
-      }
-    }
-    for (k=0;k<9;k++){
       poofstate[k]=LOW;
-      digitalWrite(opoofled[k], LOW);
-    }      
+      digitalWrite(opoofled[k],LOW);
+    }
+    for (k=0; k<12; k++){
+      digitalWrite(ostepled[k],LOW);
+    }
     switch(newmode){
       case 0:          
         digitalWrite(omusicled, LOW);
@@ -259,9 +249,8 @@ void domode(){
         digitalWrite(orandomled, LOW);
         digitalWrite(oallpoofled, LOW);
         currstep=0;
-        j=10000;
         nextstep=0;
-        currstep=0;
+        j=10000;
       break;
       case 2:
         digitalWrite(omusicled, LOW);
