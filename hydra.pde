@@ -6,8 +6,8 @@ int irandombtn = 11;
 int orandomled = 12;
 int iallpoofbtn = 14;
 int oallpoofled = 15;
-int imusic = 16;
-int omusicled = 17;
+int iProgSeq = 16;
+int oProgSeqled = 17;
 int inumsteps = 0;
 int isetstep = 1;
 int isteplength = 2;
@@ -15,7 +15,7 @@ int ipooflength = 3;
 
 int poofstate[9] = {LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW};
 int poofcount[9] = {0,0,0,0,0,0,0,0,0};
-int musicstate[12][9] = {{LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW},{LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW},{LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW},{LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW},{LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW},{LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW},{LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW},{LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW},{LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW},{LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW},{LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW},{LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW}};
+int ProgSeqstate[12][9] = {{LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW},{LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW},{LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW},{LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW},{LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW},{LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW},{LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW},{LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW},{LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW},{LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW},{LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW},{LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW}};
 int numsteps = 0;
 int currstep = 0;
 int nextstep = 0;
@@ -49,8 +49,8 @@ void setup(){
   pinMode (orandomled, OUTPUT);
   pinMode (iallpoofbtn, INPUT);
   pinMode (oallpoofled, OUTPUT);
-  pinMode (imusic, INPUT);
-  pinMode (omusicled, OUTPUT);
+  pinMode (iProgSeq, INPUT);
+  pinMode (oProgSeqled, OUTPUT);
   randomSeed(analogRead(5));
 }
 
@@ -67,7 +67,7 @@ void loop(){
         }
       }
      break;
-    case 1://musical sequence
+    case 1://programmable repeating sequence
       numsteps = readknob(inumsteps);
       setstep = readknob(isetstep);
       steplength = 10 + (1023-analogRead(isteplength))/10;
@@ -98,9 +98,9 @@ void loop(){
       if (setstep <= numsteps) {
         for (k=0; k<9; k++){
           if (readbtn(ipoofbtn[k])){
-            musicstate[setstep][k] = musicstate[setstep][k]?LOW:HIGH;
+            ProgSeqstate[setstep][k] = ProgSeqstate[setstep][k]?LOW:HIGH;
           }
-          digitalWrite(opoofled[k], musicstate[setstep][k]);
+          digitalWrite(opoofled[k], ProgSeqstate[setstep][k]);
         }
       }
       if (j>steplength){
@@ -108,8 +108,8 @@ void loop(){
         currstep=nextstep;
         nextstep=(currstep+1)>numsteps?0:currstep+1;
         for (i=0; i<9; i++){
-          if(musicstate[currstep][i]){
-            if ((currstep != nextstep) && musicstate[nextstep][i]){
+          if(ProgSeqstate[currstep][i]){
+            if ((currstep != nextstep) && ProgSeqstate[nextstep][i]){
               poofcount[i]=steplength+1;
             }
             else {
@@ -207,7 +207,7 @@ int readbtn(int btn){
 
 void domode(){
   int newmode = mode;
-  if (readbtn(imusic)){
+  if (readbtn(iProgSeq)){
     if (mode == 1) {
       newmode = 0;
     }
@@ -240,12 +240,12 @@ void domode(){
     }
     switch(newmode){
       case 0:          
-        digitalWrite(omusicled, LOW);
+        digitalWrite(oProgSeqled, LOW);
         digitalWrite(orandomled, LOW);
         digitalWrite(oallpoofled, LOW);
       break;
       case 1:
-        digitalWrite(omusicled, HIGH);
+        digitalWrite(oProgSeqled, HIGH);
         digitalWrite(orandomled, LOW);
         digitalWrite(oallpoofled, LOW);
         currstep=0;
@@ -253,20 +253,20 @@ void domode(){
         j=10000;
       break;
       case 2:
-        digitalWrite(omusicled, LOW);
+        digitalWrite(oProgSeqled, LOW);
         digitalWrite(orandomled, HIGH);
         digitalWrite(oallpoofled, LOW);
       break;
       case 3:
-        digitalWrite(omusicled, LOW);
+        digitalWrite(oProgSeqled, LOW);
         digitalWrite(orandomled, LOW);
         digitalWrite(oallpoofled, HIGH);
       break;
     }
-    if (digitalRead(iallpoofbtn) && digitalRead(imusic)){
+    if (digitalRead(iallpoofbtn) && digitalRead(iProgSeq)){
       for (i=0; i<12; i++){
         for (k=0; k<9; k++) {
-          musicstate[i][k]=LOW;
+          ProgSeqstate[i][k]=LOW;
         }
       }
     }
