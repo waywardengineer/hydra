@@ -1,3 +1,4 @@
+//input & output pins
 int opoof[9] = {2,3,4,5,6,7,8,9,10};
 int opoofled[9] = {20,21,22,23,24,25,26,27,28};
 int ipoofbtn[9] = {29,30,31,32,33,34,35,36,37};
@@ -12,6 +13,7 @@ int inumsteps = 0;
 int isetstep = 1;
 int isteplength = 2;
 int ipooflength = 3;
+
 
 int poofstate[9] = {LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW};
 int poofcount[9] = {0,0,0,0,0,0,0,0,0};
@@ -72,7 +74,7 @@ void loop(){
       setstep = readknob(isetstep);
       steplength = 10 + (1023-analogRead(isteplength))/10;
       pooflength = 10 + (1023-analogRead(ipooflength))/10;
-      for (k=0; k < 12; k++) {
+      for (k=0; k < 12; k++) {//do the leds for the program step knob
         if (k <= numsteps && (k != currstep || currstep == setstep)){// turn on step leds
           if (k == setstep){//blink led for current step
             if (blinkcount < 1){
@@ -95,7 +97,7 @@ void loop(){
             digitalWrite(ostepled[k], LOW);
         }
       }
-      if (setstep <= numsteps) {
+      if (setstep <= numsteps) {// do the poof leds if we're programming a step
         for (k=0; k<9; k++){
           if (readbtn(ipoofbtn[k])){
             ProgSeqstate[setstep][k] = ProgSeqstate[setstep][k]?LOW:HIGH;
@@ -103,23 +105,23 @@ void loop(){
           digitalWrite(opoofled[k], ProgSeqstate[setstep][k]);
         }
       }
-      if (j>steplength){
+      if (j>steplength){//move to next step
         j=0;
         currstep=nextstep;
         nextstep=(currstep+1)>numsteps?0:currstep+1;
         for (i=0; i<9; i++){
-          if(ProgSeqstate[currstep][i]){
-            if ((currstep != nextstep) && ProgSeqstate[nextstep][i]){
+          if(ProgSeqstate[currstep][i]){//turn on poofs for new step
+            if ((currstep != nextstep) && ProgSeqstate[nextstep][i]){//poof is also on for next step, so leave it on for this full step
               poofcount[i]=steplength+1;
             }
-            else {
+            else {//set poof turn off time
               poofcount[i] = pooflength;
             }
             poofstate[i] = HIGH;
           }
         }
       }
-      for (i=0; i<9; i++){
+      for (i=0; i<9; i++){//see if any poofs have timed out
         if (poofcount[i] <= 0){
           poofstate[i] = LOW;
         }
